@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Kitiya Rattanajindakul">
+    <title>Money Thunder l Haircut Offering Simulator</title>
+    <style>
+        body { 
+            font-family: 'Tahoma', sans-serif; 
+            background: #f0f2f5; 
+            display: flex; 
+            justify-content: center; 
+            padding: 20px; 
+            margin: 0; 
+            font-size: 15px; 
+            color: #333;
+            position: relative;
+        }
+
+        .container { background: white; width: 100%; max-width: 580px; padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); position: relative; z-index: 1; }
+        h2 { color: #1a73e8; text-align: center; margin-top: 0; border-bottom: 2px solid #eef2f7; padding-bottom: 15px; font-size: 20px; font-weight: 800; }
+        
+        .input-row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 150px; }
+        .full-width { width: 100%; flex: none; }
+        
+        label { display: block; font-weight: bold; margin-bottom: 6px; color: #444; font-size: 15px; }
+        
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ced4da; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 15px; 
+            font-family: inherit; 
+        }
+        input:focus, select:focus { border-color: #1a73e8; outline: none; background: #f8fbff; }
+
+        /* การจัดการปุ่ม 6 ปุ่มให้อยู่แถวเดียวกัน */
+        .due-btn-group { 
+            display: grid; 
+            grid-template-columns: repeat(6, 1fr); 
+            gap: 5px; 
+        }
+        .btn-date { 
+            background: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 10px 1px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: bold; 
+            font-family: inherit; 
+            transition: 0.2s; 
+            color: #444; 
+            white-space: nowrap; 
+            text-align: center;
+        }
+        .btn-date.small-text { font-size: 12px; }
+        .btn-date.active { background: #1a73e8; color: white; border-color: #1a73e8; }
+
+        .discount-card { background: #fff9e6; border: 1px dashed #ffc107; padding: 15px; border-radius: 12px; margin: 20px 0; position: relative; }
+        .btn-clear-yellow { background: #ffc107; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; position: absolute; right: 10px; top: 10px; font-family: inherit; }
+        .highlight-input { border: 2px solid #ffc107; background: #fffdf5; font-weight: bold; color: #b45309; }
+
+        #warningMessage { color: #dc3545; font-weight: bold; font-size: 13px; margin-top: 10px; display: none; text-align: center; border: 1px solid #dc3545; padding: 8px; border-radius: 5px; background: #fff5f5; }
+
+        .result-panel { background: #e7f3ff; border: 1px solid #b3d7ff; border-radius: 12px; padding: 15px; text-align: center; margin-top: 15px; }
+        .net-amount { color: #28a745; font-size: 40px; font-weight: 800; margin: 5px 0; line-height: 1; }
+        
+        .preview-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-top: 15px; font-size: 14px; color: #333; text-align: left; min-height: 40px; border-left: 5px solid #1a73e8; }
+        .preview-label { font-size: 13px; font-weight: bold; color: #1a73e8; margin-bottom: 5px; display: block; }
+
+        .btn-copy { background: #1a73e8; color: white; width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: inherit; }
+        .btn-copy:hover { background: #1557b0; }
+        
+        .btn-reset { background: #dc3545; color: white; width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; font-family: inherit; }
+        
+        /* ส่วนแสดง Version และ Copyright */
+        .footer-info { text-align: center; margin-top: 20px; }
+        .version-text { font-size: 11px; color: #bbb; margin-bottom: 2px; }
+        .footer-credit { font-size: 11px; color: #999; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Money Thunder l Haircut Offering Simulator</h2>
+
+    <div class="input-row">
+        <div class="form-group">
+            <label>1. เลขที่สัญญา</label>
+            <input type="text" id="contractNo" placeholder="ระบุเลขที่สัญญา" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+            <label>2. Acct Type</label>
+            <select id="acctType" onchange="updatePreview()">
+                <option value="DPD">DPD</option>
+                <option value="Pre-Legal">Pre-Legal</option>
+                <option value="Post-Legal">Post-Legal</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="input-row">
+        <div class="form-group full-width">
+            <label>3. Due Date ของลูกค้า (เลือกวันที่)</label>
+            <div class="due-btn-group">
+                <button class="btn-date" onclick="setDueDate(1, this)">1</button>
+                <button class="btn-date" onclick="setDueDate(5, this)">5</button>
+                <button class="btn-date" onclick="setDueDate(15, this)">15</button>
+                <button class="btn-date" onclick="setDueDate(25, this)">25</button>
+                <button class="btn-date" onclick="setDueDate(28, this)">28</button>
+                <button class="btn-date small-text" onclick="setDueDate('สิ้นเดือน', this)">สิ้นเดือน</button>
+            </div>
+            <input type="hidden" id="selectedDueDateValue">
+        </div>
+    </div>
+
+    <div class="input-row">
+        <div class="form-group">
+            <label>4. กลุ่มงาน</label>
+            <select id="groupWork" onchange="updatePreview()">
+                <option value="91-120">91-120</option>
+                <option value="121-150">121-150</option>
+                <option value="151-180">151-180</option>
+                <option value="180+">180+</option>
+                <option value="อื่นๆ">อื่นๆ</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>5. OS (ยอดหนี้ ณ วันที่เสนอปิดบัญชี)</label>
+            <input type="number" id="osAmount" placeholder="0.00" oninput="calculate('os')">
+        </div>
+    </div>
+
+    <div class="discount-card">
+        <button class="btn-clear-yellow" onclick="clearOffer()">ล้างข้อเสนอ</button>
+        <label>6. ข้อเสนอ (ใส่ยอดปิด หรือ % ส่วนลด)</label>
+        
+        <div class="form-group" style="margin-top: 10px;">
+            <label>ยอดเสนอปิดบัญชี (Net)</label>
+            <input type="number" id="netInput" class="highlight-input" placeholder="0.00" oninput="calculate('net')">
+        </div>
+
+        <div class="input-row" style="margin-top: 10px;">
+            <div class="form-group">
+                <label>ส่วนลด (บาท)</label>
+                <input type="text" id="discAmtDisplay" disabled style="background: #eee;">
+            </div>
+            <div class="form-group">
+                <label>คิดเป็นส่วนลด (%)</label>
+                <input type="number" id="discPctInput" placeholder="%" step="0.01" oninput="calculate('pct')">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 5px;">
+            <label>จำนวนงวดที่เสนอ</label>
+            <select id="period" onchange="calculate('net')"></select>
+        </div>
+
+        <div id="warningMessage">⚠️ ส่วนลดเกิน 50% ขอให้แจ้งหัวหน้างานเพื่อดำเนินการเพิ่มเติม</div>
+    </div>
+
+    <div class="form-group">
+        <label>7. วันที่เริ่มจ่าย</label>
+        <input type="date" id="startDate" onchange="updatePreview()">
+    </div>
+
+    <div class="result-panel">
+        <div id="selectedDateShow" style="font-size: 14px; color: #1a73e8; font-weight: bold; margin-bottom: 5px;">กรุณาเลือกข้อมูลนำเสนอ</div>
+        <p class="net-amount" id="netDisplay">0.00</p>
+        <div id="monthDisplay" style="font-weight: bold; font-size: 16px;">ชำระงวดละ: 0.00 บาท</div>
+    </div>
+
+    <div class="preview-box">
+        <span class="preview-label">PREVIEW ข้อมูลที่จะคัดลอกลง CALL LOG:</span>
+        <div id="callLogPreview" style="font-weight: bold; color: #444;">...กรุณากรอกข้อมูลเพื่อดูตัวอย่าง...</div>
+    </div>
+
+    <button class="btn-copy" onclick="copyNote()">📋 คัดลอกข้อมูลลง Call log</button>
+    <button class="btn-reset" onclick="location.reload()">🔄 ล้างข้อมูลทั้งหมด</button>
+    
+    <div class="footer-info">
+        <div class="version-text">Version 1.20260327.1831</div>
+        <div class="footer-credit">
+            Copyright © 2026 Kitiya Rattanajindakul | Abacus Digital | Private Internal Tool
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        const periodSelect = document.getElementById('period');
+        for (let i = 1; i <= 24; i++) {
+            let opt = document.createElement('option');
+            opt.value = i; opt.innerHTML = i + ' งวด';
+            periodSelect.appendChild(opt);
+        }
+        document.getElementById('startDate').valueAsDate = new Date();
+        updatePreview();
+    };
+
+    function setDueDate(day, btn) {
+        document.querySelectorAll('.btn-date').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('selectedDueDateValue').value = day;
+        document.getElementById('selectedDateShow').innerText = "ลูกค้ามีกำหนดชำระทุกวันที่: " + day;
+        updatePreview();
+    }
+
+    function ceilTwoDecimal(val) {
+        return Math.ceil(val * 100) / 100;
+    }
+
+    function calculate(source) {
+        const os = parseFloat(document.getElementById('osAmount').value) || 0;
+        const netInput = document.getElementById('netInput');
+        const pctInput = document.getElementById('discPctInput');
+        const period = parseInt(document.getElementById('period').value) || 1;
+        const warning = document.getElementById('warningMessage');
+
+        if (os > 0) {
+            if (source === 'net' || source === 'os') {
+                const netVal = parseFloat(netInput.value) || 0;
+                const discAmt = os - netVal;
+                const discPct = (discAmt / os) * 100;
+                pctInput.value = discPct.toFixed(2);
+                document.getElementById('discAmtDisplay').value = discAmt.toLocaleString(undefined, {minimumFractionDigits: 2});
+            } 
+            else if (source === 'pct') {
+                const pctVal = parseFloat(pctInput.value) || 0;
+                const discAmt = (os * pctVal) / 100;
+                const netVal = os - discAmt;
+                netInput.value = netVal.toFixed(2);
+                document.getElementById('discAmtDisplay').value = discAmt.toLocaleString(undefined, {minimumFractionDigits: 2});
+            }
+            const currentPct = parseFloat(pctInput.value) || 0;
+            warning.style.display = currentPct >= 50 ? "block" : "none";
+        }
+
+        const finalNet = parseFloat(netInput.value) || 0;
+        document.getElementById('netDisplay').innerText = finalNet.toLocaleString('th-TH', {minimumFractionDigits: 2});
+        const rawPerMonth = finalNet / period;
+        const perMonth = ceilTwoDecimal(rawPerMonth);
+        document.getElementById('monthDisplay').innerText = `ชำระงวดละ: ${perMonth.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท (${period} งวด)`;
+        updatePreview();
+    }
+
+    function updatePreview() {
+        const os = parseFloat(document.getElementById('osAmount').value) || 0;
+        const netValue = parseFloat(document.getElementById('netInput').value) || 0;
+        const discPct = parseFloat(document.getElementById('discPctInput').value || 0).toFixed(2);
+        const period = document.getElementById('period').value;
+        const type = document.getElementById('acctType').value;
+        const group = document.getElementById('groupWork').value;
+        const today = new Date().toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const perMonth = ceilTwoDecimal(netValue / parseInt(period)).toLocaleString('th-TH', {minimumFractionDigits: 2});
+
+        if(os > 0 && netValue > 0) {
+            const text = `นำเสนอ HC${discPct}% OS ${os.toLocaleString()} บาท ณ วันที่ ${today} ชำระปิด ${netValue.toLocaleString()} บาท / ผ่อน ${period} งวด งวดละ ${perMonth} บาท / ประเภทงาน ${type}, ${group} /`;
+            document.getElementById('callLogPreview').innerText = text;
+        } else {
+            document.getElementById('callLogPreview').innerText = "...กรุณากรอกข้อมูลเพื่อดูตัวอย่าง...";
+        }
+    }
+
+    function copyNote() {
+        const text = document.getElementById('callLogPreview').innerText;
+        if(text.includes("...")) { alert("กรุณากรอกข้อมูลให้ครบก่อนคัดลอกครับ"); return; }
+        
+        navigator.clipboard.writeText(text).then(() => {
+            alert("คัดลอกข้อมูลนำเสนอ Haircut เรียบร้อย ขอให้เจ้าหน้าที่นำไปกดวางใน Call log");
+        });
+    }
+
+    function clearOffer() {
+        document.getElementById('netInput').value = '';
+        document.getElementById('discPctInput').value = '';
+        document.getElementById('discAmtDisplay').value = '';
+        document.getElementById('period').value = 1;
+        document.getElementById('warningMessage').style.display = "none";
+        calculate('net');
+    }
+</script>
+
+</body>
+</html>
